@@ -1,16 +1,25 @@
-# React + Vite
+# HabitArc – Gamified Habit Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Description
+A modern web app that helps users build consistency through gamified habit tracking, streaks, and visual insights. HabitArc is designed with a sleek, minimalist user interface to make tracking your daily routines satisfying and addictive.
 
-Currently, two official plugins are available:
+## Features
+- **Daily habit tracking with interactive UI**: Mark habits as complete with satisfying bouncy animations and confetti effects.
+- **Streak system to maintain consistency**: Track your current and longest streaks to keep the momentum going.
+- **GitHub-style heatmap for progress visualization**: (Coming Soon) Visualize your long-term consistency.
+- **Insight dashboard with charts and analytics**: View dynamic stats about your daily completion rates.
+- **Gamification (XP, levels, badges)**: (Coming Soon) Earn rewards for sticking to your routines.
+- **Mercy system (skip days and recovery mode)**: (Coming Soon) A forgiving system to help you recover without losing your hard-earned progress.
+- **Responsive and modern UI**: A beautifully crafted, mobile-friendly interface featuring dark mode by default.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tech Stack
+- **React (Vite)**
+- **JavaScript**
+- **Tailwind CSS** (v4)
+- **React Router**
+- **Framer Motion** (For micro-interactions and layout animations)
+- **React Confetti** (For rewarding completion effects)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+> *Built with clean, modular, and beginner-friendly code.*
