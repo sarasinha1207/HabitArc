@@ -121,6 +121,7 @@ export default function Home() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [viewMode, setViewMode] = useState('daily');
   const [editingHabit, setEditingHabit] = useState(null);
+  const [habitToDelete, setHabitToDelete] = useState(null);
   const { width, height } = useWindowSize();
 
   const currentList = viewMode === 'daily' ? habits : weeklyHabits;
@@ -138,9 +139,10 @@ export default function Home() {
     else toggleWeeklyHabit(id);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Warning: Deleting this pathway will permanently remove its streak and XP contributions. Proceed?")) {
-      deleteHabit(id, viewMode);
+  const confirmDelete = () => {
+    if (habitToDelete) {
+      deleteHabit(habitToDelete, viewMode);
+      setHabitToDelete(null);
     }
   };
 
@@ -177,6 +179,32 @@ export default function Home() {
         initialData={editingHabit}
         isWeekly={viewMode === 'weekly'}
       />
+
+      {/* Delete Confirmation Modal */}
+      {habitToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060B14]/80 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-[#111827] border border-red-500/30 rounded-2xl w-full max-w-sm shadow-[0_0_40px_rgba(239,68,68,0.15)] overflow-hidden relative">
+            <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
+              <h2 className="text-xl font-bold text-slate-100">Confirm Deletion</h2>
+            </div>
+            <div className="p-6">
+              <p className="text-slate-300 text-sm leading-relaxed">
+                Warning: Deleting this pathway will permanently remove its streak and XP contributions from your profile. Are you sure?
+              </p>
+            </div>
+            <div className="p-6 border-t border-slate-800 bg-[#0B1120] flex justify-end gap-3">
+              <button onClick={() => setHabitToDelete(null)} className="px-5 py-2.5 rounded-xl text-slate-400 font-semibold hover:text-slate-200">Cancel</button>
+              <button 
+                onClick={confirmDelete}
+                className="px-6 py-2.5 bg-red-500/10 border border-red-500/50 hover:bg-red-500 hover:text-[#0B1120] text-red-400 rounded-xl font-bold transition-all"
+              >
+                Delete Pathway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Top Banner Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -292,7 +320,7 @@ export default function Home() {
                     <button onClick={() => handleEdit(habit)} className="p-2 text-slate-500 hover:text-cyan-400 transition-colors bg-[#0B1120] rounded-lg border border-slate-800 hover:border-cyan-500/50">
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(habit.id)} className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-[#0B1120] rounded-lg border border-slate-800 hover:border-red-500/50">
+                    <button onClick={() => setHabitToDelete(habit.id)} className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-[#0B1120] rounded-lg border border-slate-800 hover:border-red-500/50 z-20 relative">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>

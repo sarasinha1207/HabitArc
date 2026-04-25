@@ -116,14 +116,23 @@ export default function Layout() {
   };
 
   const handleToggle = (id, type) => {
+    const list = type === 'weekly' ? weeklyHabits : habits;
     const setList = type === 'weekly' ? setWeeklyHabits : setHabits;
     
+    const habit = list.find(h => h.id === id);
+    if (!habit) return;
+
+    const isNowCompleted = !habit.completed;
+    const xpGained = habit.xp || getXpByDifficulty(habit.difficulty);
+    
+    // 1. Update XP
+    setTotalXP(curr => curr + (isNowCompleted ? xpGained : -xpGained));
+
+    // 2. Update list
+    let newList = [];
     setList(prev => {
-      const newList = prev.map(h => {
+      newList = prev.map(h => {
         if (h.id === id) {
-          const isNowCompleted = !h.completed;
-          const xpGained = h.xp || getXpByDifficulty(h.difficulty);
-          setTotalXP(curr => curr + (isNowCompleted ? xpGained : -xpGained));
           return {
             ...h,
             completed: isNowCompleted,
@@ -132,31 +141,33 @@ export default function Layout() {
         }
         return h;
       });
-
-      if (type !== 'weekly') {
-        const today = getTodayDateString();
-        const completedCount = newList.filter(h => h.completed).length;
-        
-        setCompletedDates(prevDates => {
-          let newDates = [...prevDates];
-          const index = newDates.findIndex(d => (typeof d === 'string' ? d : d.date) === today);
-          if (completedCount > 0) {
-            if (index >= 0) {
-              newDates[index] = { date: today, count: completedCount };
-            } else {
-              newDates.push({ date: today, count: completedCount });
-            }
-          } else {
-            if (index >= 0 && !newDates[index].isSkip) {
-              newDates = newDates.filter(d => (typeof d === 'string' ? d : d.date) !== today);
-            }
-          }
-          return newDates.sort((a, b) => (typeof a === 'string' ? a : a.date).localeCompare((typeof b === 'string' ? b : b.date)));
-        });
-      }
-
       return newList;
     });
+
+    // 3. Update completedDates (only for daily habits)
+    if (type !== 'weekly') {
+      const today = getTodayDateString();
+      // We calculate completedCount based on the updated habit state
+      const updatedList = list.map(h => h.id === id ? { ...h, completed: isNowCompleted } : h);
+      const completedCount = updatedList.filter(h => h.completed).length;
+      
+      setCompletedDates(prevDates => {
+        let newDates = [...prevDates];
+        const index = newDates.findIndex(d => (typeof d === 'string' ? d : d.date) === today);
+        if (completedCount > 0) {
+          if (index >= 0) {
+            newDates[index] = { date: today, count: completedCount };
+          } else {
+            newDates.push({ date: today, count: completedCount });
+          }
+        } else {
+          if (index >= 0 && !newDates[index].isSkip) {
+            newDates = newDates.filter(d => (typeof d === 'string' ? d : d.date) !== today);
+          }
+        }
+        return newDates.sort((a, b) => (typeof a === 'string' ? a : a.date).localeCompare((typeof b === 'string' ? b : b.date)));
+      });
+    }
   };
 
   const toggleHabit = (id) => handleToggle(id, 'daily');
@@ -176,14 +187,14 @@ export default function Layout() {
   };
 
   const deleteHabit = (id, type) => {
+    const list = type === 'weekly' ? weeklyHabits : habits;
+    const habit = list.find(h => h.id === id);
+    if (habit && habit.completed) {
+      setTotalXP(curr => curr - (habit.xp || getXpByDifficulty(habit.difficulty)));
+    }
+    
     const setList = type === 'weekly' ? setWeeklyHabits : setHabits;
-    setList(prev => {
-      const habit = prev.find(h => h.id === id);
-      if (habit && habit.completed) {
-        setTotalXP(curr => curr - (habit.xp || getXpByDifficulty(habit.difficulty)));
-      }
-      return prev.filter(h => h.id !== id);
-    });
+    setList(prev => prev.filter(h => h.id !== id));
   };
 
   const highestHabitStreak = Math.max(

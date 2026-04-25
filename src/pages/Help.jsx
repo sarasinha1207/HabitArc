@@ -56,9 +56,58 @@ export default function Help() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* FAQs */}
+      <div className="space-y-12">
+        {/* System Mechanics */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-orange-400 rounded-full inline-block" />
+            Category & Experience Distribution
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl border border-slate-800 bg-[#111827] hover:border-cyan-500/50 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4">
+                <span className="text-cyan-400 font-bold">PHY</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-100 mb-2">Physical Fortress</h3>
+              <p className="text-sm text-slate-400 mb-6">Movement, strength, and physical conditioning tasks.</p>
+              <ul className="text-sm space-y-3 text-slate-300">
+                <li className="flex justify-between items-center"><span className="text-emerald-400 text-xs font-bold uppercase tracking-widest bg-emerald-400/10 px-2 py-1 rounded">Beginner</span><span className="font-mono font-bold">15 XP</span></li>
+                <li className="flex justify-between items-center"><span className="text-cyan-400 text-xs font-bold uppercase tracking-widest bg-cyan-400/10 px-2 py-1 rounded">Intermediate</span><span className="font-mono font-bold">30 XP</span></li>
+                <li className="flex justify-between items-center"><span className="text-orange-400 text-xs font-bold uppercase tracking-widest bg-orange-400/10 px-2 py-1 rounded">Advanced</span><span className="font-mono font-bold">50 XP</span></li>
+              </ul>
+            </div>
+
+            <div className="p-6 rounded-2xl border border-slate-800 bg-[#111827] hover:border-purple-500/50 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
+                <span className="text-purple-400 font-bold">COG</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-100 mb-2">Cognitive Shield</h3>
+              <p className="text-sm text-slate-400 mb-6">Learning, meditation, and mental clarity tasks.</p>
+              <ul className="text-sm space-y-3 text-slate-300">
+                <li className="flex justify-between items-center"><span className="text-emerald-400 text-xs font-bold uppercase tracking-widest bg-emerald-400/10 px-2 py-1 rounded">Beginner</span><span className="font-mono font-bold">15 XP</span></li>
+                <li className="flex justify-between items-center"><span className="text-cyan-400 text-xs font-bold uppercase tracking-widest bg-cyan-400/10 px-2 py-1 rounded">Intermediate</span><span className="font-mono font-bold">30 XP</span></li>
+                <li className="flex justify-between items-center"><span className="text-orange-400 text-xs font-bold uppercase tracking-widest bg-orange-400/10 px-2 py-1 rounded">Advanced</span><span className="font-mono font-bold">50 XP</span></li>
+              </ul>
+            </div>
+
+            <div className="p-6 rounded-2xl border border-slate-800 bg-[#111827] hover:border-emerald-500/50 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4">
+                <span className="text-emerald-400 font-bold">MET</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-100 mb-2">Metabolic Sync</h3>
+              <p className="text-sm text-slate-400 mb-6">Nutrition, hydration, and recovery tasks.</p>
+              <ul className="text-sm space-y-3 text-slate-300">
+                <li className="flex justify-between items-center"><span className="text-emerald-400 text-xs font-bold uppercase tracking-widest bg-emerald-400/10 px-2 py-1 rounded">Beginner</span><span className="font-mono font-bold">15 XP</span></li>
+                <li className="flex justify-between items-center"><span className="text-cyan-400 text-xs font-bold uppercase tracking-widest bg-cyan-400/10 px-2 py-1 rounded">Intermediate</span><span className="font-mono font-bold">30 XP</span></li>
+                <li className="flex justify-between items-center"><span className="text-orange-400 text-xs font-bold uppercase tracking-widest bg-orange-400/10 px-2 py-1 rounded">Advanced</span><span className="font-mono font-bold">50 XP</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* FAQs */}
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
             <span className="w-1.5 h-6 bg-cyan-400 rounded-full inline-block" />
@@ -108,6 +157,7 @@ export default function Help() {
           </div>
         </section>
 
+      </div>
       </div>
     </div>
   );
