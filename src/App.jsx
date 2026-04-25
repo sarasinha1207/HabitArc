@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Heatmap from './pages/Heatmap';
 import Profile from './pages/Profile';
 import Help from './pages/Help';
+import Ranks from './pages/Ranks';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="heatmap" element={<Heatmap />} />
           <Route path="profile" element={<Profile />} />
           <Route path="help" element={<Help />} />
+          <Route path="ranks" element={<Ranks />} />
         </Route>
       </Routes>
     </BrowserRouter>

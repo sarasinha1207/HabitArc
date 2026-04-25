@@ -8,11 +8,21 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
+const getXpByDifficulty = (difficulty) => {
+  if (difficulty === 'Advanced') return 50;
+  if (difficulty === 'Intermediate') return 30;
+  return 15; // Beginner
+};
+
 const INITIAL_HABITS = [
-  { id: 1, name: 'Hydration Protocol', description: '3L Spring Water + Electrolytes', completed: false, streak: 14, xp: 25 },
-  { id: 2, name: 'Strength Conditioning', description: '45min Hypertrophy Session', completed: false, streak: 8, xp: 50 },
-  { id: 3, name: 'Mental Clarity', description: '20min Deep Meditation', completed: false, streak: 22, xp: 15, isDanger: true },
-  { id: 4, name: 'Neural Expansion', description: 'Read 20 Pages Non-Fiction', completed: false, streak: 3, xp: 15 },
+  { id: 1, name: 'Hydration Protocol', description: '3L Spring Water + Electrolytes', category: 'Physical', difficulty: 'Beginner', completed: false, streak: 14, xp: 15 },
+  { id: 2, name: 'Strength Conditioning', description: '45min Hypertrophy Session', category: 'Physical', difficulty: 'Advanced', completed: false, streak: 8, xp: 50 },
+  { id: 3, name: 'Mental Clarity', description: '20min Deep Meditation', category: 'Cognitive', difficulty: 'Intermediate', completed: false, streak: 22, xp: 30, isDanger: true },
+];
+
+const INITIAL_WEEKLY = [
+  { id: 4, name: 'Meal Prep', description: 'Prepare 5 lunches', category: 'Metabolic', difficulty: 'Advanced', completed: false, streak: 2, xp: 50 },
+  { id: 5, name: 'Read a Book', description: 'Finish 1 book this week', category: 'Cognitive', difficulty: 'Intermediate', completed: false, streak: 5, xp: 30 },
 ];
 
 const getTodayDateString = () => {
@@ -24,6 +34,11 @@ export default function Layout() {
   const [habits, setHabits] = useState(() => {
     const saved = localStorage.getItem('habitarc_habits_v2');
     return saved ? JSON.parse(saved) : INITIAL_HABITS;
+  });
+
+  const [weeklyHabits, setWeeklyHabits] = useState(() => {
+    const saved = localStorage.getItem('habitarc_weekly_habits');
+    return saved ? JSON.parse(saved) : INITIAL_WEEKLY;
   });
 
   const [totalXP, setTotalXP] = useState(() => {
@@ -61,9 +76,15 @@ export default function Layout() {
     return saved !== null ? parseInt(saved, 10) : 2;
   });
 
+  const [isQuestModalOpen, setIsQuestModalOpen] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('habitarc_habits_v2', JSON.stringify(habits));
   }, [habits]);
+
+  useEffect(() => {
+    localStorage.setItem('habitarc_weekly_habits', JSON.stringify(weeklyHabits));
+  }, [weeklyHabits]);
 
   useEffect(() => {
     localStorage.setItem('habitarc_dates_v2', JSON.stringify(completedDates));
@@ -94,13 +115,15 @@ export default function Layout() {
     });
   };
 
-  const toggleHabit = (id) => {
-    setHabits(prevHabits => {
-      const newHabits = prevHabits.map(h => {
+  const handleToggle = (id, type) => {
+    const setList = type === 'weekly' ? setWeeklyHabits : setHabits;
+    
+    setList(prev => {
+      const newList = prev.map(h => {
         if (h.id === id) {
           const isNowCompleted = !h.completed;
-          const xpGained = h.xp || 15;
-          setTotalXP(prev => prev + (isNowCompleted ? xpGained : -xpGained));
+          const xpGained = h.xp || getXpByDifficulty(h.difficulty);
+          setTotalXP(curr => curr + (isNowCompleted ? xpGained : -xpGained));
           return {
             ...h,
             completed: isNowCompleted,
@@ -109,51 +132,106 @@ export default function Layout() {
         }
         return h;
       });
-      
-      const today = getTodayDateString();
-      const completedCount = newHabits.filter(h => h.completed).length;
-      
-      setCompletedDates(prevDates => {
-        let newDates = [...prevDates];
-        const index = newDates.findIndex(d => (typeof d === 'string' ? d : d.date) === today);
-        if (completedCount > 0) {
-          if (index >= 0) {
-            newDates[index] = { date: today, count: completedCount };
-          } else {
-            newDates.push({ date: today, count: completedCount });
-          }
-        } else {
-          if (index >= 0 && !newDates[index].isSkip) {
-            newDates = newDates.filter(d => (typeof d === 'string' ? d : d.date) !== today);
-          }
-        }
-        return newDates.sort((a, b) => (typeof a === 'string' ? a : a.date).localeCompare((typeof b === 'string' ? b : b.date)));
-      });
 
-      return newHabits;
+      if (type !== 'weekly') {
+        const today = getTodayDateString();
+        const completedCount = newList.filter(h => h.completed).length;
+        
+        setCompletedDates(prevDates => {
+          let newDates = [...prevDates];
+          const index = newDates.findIndex(d => (typeof d === 'string' ? d : d.date) === today);
+          if (completedCount > 0) {
+            if (index >= 0) {
+              newDates[index] = { date: today, count: completedCount };
+            } else {
+              newDates.push({ date: today, count: completedCount });
+            }
+          } else {
+            if (index >= 0 && !newDates[index].isSkip) {
+              newDates = newDates.filter(d => (typeof d === 'string' ? d : d.date) !== today);
+            }
+          }
+          return newDates.sort((a, b) => (typeof a === 'string' ? a : a.date).localeCompare((typeof b === 'string' ? b : b.date)));
+        });
+      }
+
+      return newList;
     });
   };
 
-  const addHabit = (name) => {
-    if (!name.trim()) return;
-    const newHabit = {
-      id: Date.now(),
-      name: name.trim(),
-      description: 'New Neural Pathway',
-      completed: false,
-      streak: 0,
-      xp: 10
-    };
-    setHabits([...habits, newHabit]);
+  const toggleHabit = (id) => handleToggle(id, 'daily');
+  const toggleWeeklyHabit = (id) => handleToggle(id, 'weekly');
+
+  const addOrUpdateHabit = (habitData, type, isEditing) => {
+    const xp = getXpByDifficulty(habitData.difficulty);
+    const setList = type === 'weekly' ? setWeeklyHabits : setHabits;
+
+    setList(prev => {
+      if (isEditing) {
+        return prev.map(h => h.id === habitData.id ? { ...h, ...habitData, xp } : h);
+      } else {
+        return [...prev, { ...habitData, id: Date.now(), completed: false, streak: 0, xp }];
+      }
+    });
   };
 
-  const currentStreakVal = completedDates.length > 0 ? 12 : 0; // Simulated for header
-  const level = Math.floor(totalXP / 1000) + 28; // Dummy calculation for level
+  const deleteHabit = (id, type) => {
+    const setList = type === 'weekly' ? setWeeklyHabits : setHabits;
+    setList(prev => {
+      const habit = prev.find(h => h.id === id);
+      if (habit && habit.completed) {
+        setTotalXP(curr => curr - (habit.xp || getXpByDifficulty(habit.difficulty)));
+      }
+      return prev.filter(h => h.id !== id);
+    });
+  };
+
+  const highestHabitStreak = Math.max(
+    0, 
+    ...habits.map(h => h.streak || 0), 
+    ...weeklyHabits.map(h => h.streak || 0)
+  );
+
+  const calculateOverallStreak = (dates) => {
+    if (!dates || dates.length === 0) return 0;
+    const sorted = [...dates].sort((a, b) => {
+      const dateA = typeof a === 'string' ? a : a.date;
+      const dateB = typeof b === 'string' ? b : b.date;
+      return dateA.localeCompare(dateB);
+    });
+    
+    let streak = 1;
+    let current = 0;
+    for (let i = 1; i < sorted.length; i++) {
+      const prevDate = new Date(typeof sorted[i-1] === 'string' ? sorted[i-1] : sorted[i-1].date);
+      const currDate = new Date(typeof sorted[i] === 'string' ? sorted[i] : sorted[i].date);
+      const diffTime = Math.abs(currDate - prevDate);
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        streak++;
+      } else if (diffDays > 1) {
+        streak = 1;
+      }
+    }
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const lastEntry = sorted[sorted.length - 1];
+    const lastDate = new Date(typeof lastEntry === 'string' ? lastEntry : lastEntry.date);
+    const todayObj = new Date(todayStr);
+    const diffDaysFromToday = Math.round((todayObj - lastDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDaysFromToday <= 1) {
+      current = streak;
+    }
+    return current;
+  };
+
+  const currentStreakVal = calculateOverallStreak(completedDates);
+  const level = Math.floor(totalXP / 1000) + 28;
 
   return (
     <div className="min-h-screen flex bg-[#0B1120] text-slate-100 font-sans selection:bg-cyan-500/30">
       
-      {/* Left Sidebar */}
       <aside className="w-64 fixed inset-y-0 left-0 bg-[#060B14] border-r border-slate-800/60 flex flex-col items-center py-8 z-50">
         <div className="flex flex-col items-center gap-3 mb-10 w-full px-6">
           <div className="w-16 h-16 rounded-full bg-slate-800 p-1 border-2 border-emerald-500 relative">
@@ -169,11 +247,11 @@ export default function Layout() {
           </div>
           <div className="w-full mt-4">
             <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-emerald-400 h-full w-[78%]" />
+              <div className="bg-emerald-400 h-full" style={{ width: `${(totalXP % 1000) / 10}%` }} />
             </div>
             <div className="flex justify-between mt-1.5 text-[10px] text-slate-500 font-medium tracking-wide">
-              <span>XP: {totalXP.toLocaleString()} / {(totalXP + 3800).toLocaleString()}</span>
-              <span>78%</span>
+              <span>XP: {totalXP.toLocaleString()}</span>
+              <span>{(totalXP % 1000) / 10}%</span>
             </div>
           </div>
         </div>
@@ -183,7 +261,7 @@ export default function Layout() {
             <Home className="w-5 h-5" /> <span className="font-medium text-sm">Home</span>
           </NavLink>
           <NavLink to="/dashboard" className={({isActive}) => cn("flex items-center gap-4 px-4 py-3 rounded-xl transition-all", isActive ? "bg-slate-800/50 text-emerald-400 border-r-2 border-emerald-400" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/30")}>
-            <LayoutDashboard className="w-5 h-5" /> <span className="font-medium text-sm">Dashboard</span>
+            <LayoutDashboard className="w-5 h-5" /> <span className="font-medium text-sm">Insights</span>
           </NavLink>
           <NavLink to="/heatmap" className={({isActive}) => cn("flex items-center gap-4 px-4 py-3 rounded-xl transition-all", isActive ? "bg-slate-800/50 text-emerald-400 border-r-2 border-emerald-400" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/30")}>
             <TrendingUp className="w-5 h-5" /> <span className="font-medium text-sm">Heatmap</span>
@@ -194,7 +272,7 @@ export default function Layout() {
         </nav>
 
         <div className="w-full px-4 mt-auto space-y-4">
-          <button onClick={() => addHabit('Custom Protocol')} className="w-full py-3 bg-emerald-400 hover:bg-emerald-300 text-[#0B1120] rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(52,211,153,0.3)] flex items-center justify-center gap-2">
+          <button onClick={() => setIsQuestModalOpen(true)} className="w-full py-3 bg-emerald-400 hover:bg-emerald-300 text-[#0B1120] rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(52,211,153,0.3)] flex items-center justify-center gap-2">
             <Plus className="w-5 h-5" /> Start New Quest
           </button>
           <div className="pt-4 border-t border-slate-800/60 space-y-1">
@@ -208,13 +286,22 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        {/* Top Header */}
         <header className="h-16 border-b border-slate-800/60 px-8 flex items-center justify-between sticky top-0 z-40 bg-[#0B1120]/80 backdrop-blur-md">
-          <div className="flex items-center gap-6 text-sm font-semibold text-slate-300">
-            <span className="text-cyan-400 cursor-pointer">Daily Log</span>
-            <span className="cursor-pointer hover:text-slate-100 transition-colors">Global Ranks</span>
+          <div className="flex items-center gap-6 text-sm font-semibold">
+            <NavLink 
+              to="/" 
+              className={({isActive}) => cn("cursor-pointer transition-colors", isActive ? "text-cyan-400" : "text-slate-300 hover:text-slate-100")}
+              end
+            >
+              Daily Log
+            </NavLink>
+            <NavLink 
+              to="/ranks" 
+              className={({isActive}) => cn("cursor-pointer transition-colors", isActive ? "text-cyan-400" : "text-slate-300 hover:text-slate-100")}
+            >
+              Global Ranks
+            </NavLink>
           </div>
           <div className="flex items-center gap-6">
             <div className="hidden md:flex items-center bg-slate-900 border border-slate-800 rounded-full px-4 py-1.5 w-64">
@@ -234,8 +321,13 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 w-full max-w-5xl mx-auto px-8 py-8">
-          <Outlet context={{ habits, toggleHabit, addHabit, completedDates, mercySkips, useSkipDay, totalXP }} />
+        <main className="flex-1 w-full max-w-5xl mx-auto px-8 py-8 relative">
+          <Outlet context={{ 
+            habits, weeklyHabits, toggleHabit, toggleWeeklyHabit, 
+            addOrUpdateHabit, deleteHabit,
+            completedDates, mercySkips, useSkipDay, totalXP, highestHabitStreak,
+            isQuestModalOpen, setIsQuestModalOpen
+          }} />
         </main>
       </div>
     </div>

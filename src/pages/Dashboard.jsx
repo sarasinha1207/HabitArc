@@ -9,7 +9,7 @@ function cn(...inputs) {
 }
 
 export default function Dashboard() {
-  const { habits, completedDates } = useOutletContext();
+  const { habits, completedDates, highestHabitStreak } = useOutletContext();
   
   const completedTodayCount = habits.filter(h => h.completed).length;
   const totalCount = habits.length;
@@ -103,9 +103,9 @@ export default function Dashboard() {
             <span className="text-[10px] text-orange-400/80 font-bold flex items-center gap-1">Streak Peak <span>🔥</span></span>
           </div>
           <p className="text-slate-400 text-sm mb-1">Current Streak</p>
-          <h3 className="text-4xl font-bold text-slate-100 mb-4">14 <span className="text-xl text-slate-500 font-medium">/ 22</span></h3>
+          <h3 className="text-4xl font-bold text-slate-100 mb-4">{highestHabitStreak} <span className="text-xl text-slate-500 font-medium">/ 22</span></h3>
           <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-orange-400 rounded-full" style={{ width: '60%' }} />
+            <div className="h-full bg-orange-400 rounded-full" style={{ width: `${Math.min(100, (highestHabitStreak / 22) * 100)}%` }} />
           </div>
         </div>
       </div>

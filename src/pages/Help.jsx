@@ -4,7 +4,7 @@ export default function Help() {
   const faqs = [
     {
       question: "How is XP calculated?",
-      answer: "Experience Points (XP) are earned by completing active neural pathways (habits) every day. Basic habits grant 15 XP, while heavy-lifting 'Heavy Quests' like workouts grant 50 XP. Your streak multipliers also increase XP gains on consecutive days."
+      answer: "Experience Points (XP) are fixed based on the difficulty of your neural pathways. Beginner tasks grant 15 XP, Intermediate tasks grant 30 XP, and Advanced tasks (like 'Heavy Quests') grant 50 XP. Completing these daily or weekly synchronizations levels up your Architect profile."
     },
     {
       question: "What happens when my streak breaks?",

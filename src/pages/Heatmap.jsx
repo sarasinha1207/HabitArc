@@ -15,7 +15,7 @@ function cn(...inputs) {
 }
 
 export default function Heatmap() {
-  const { habits, completedDates, mercySkips, useSkipDay } = useOutletContext();
+  const { habits, completedDates, mercySkips, useSkipDay, highestHabitStreak } = useOutletContext();
   const navigate = useNavigate();
   
   const total = habits.length;
@@ -23,7 +23,7 @@ export default function Heatmap() {
   const completionRate = total === 0 ? 0 : Math.round((completed / total) * 100);
   
   const calculateStreaks = (dates) => {
-    if (!dates || dates.length === 0) return { current: 0, longest: 0 };
+    if (!dates || dates.length === 0) return { current: 0 };
     
     const sorted = [...dates].sort((a, b) => {
       const dateA = typeof a === 'string' ? a : a.date;
@@ -32,7 +32,6 @@ export default function Heatmap() {
     });
 
     let current = 1;
-    let longest = 1;
     let streak = 1;
     
     for (let i = 1; i < sorted.length; i++) {
@@ -43,7 +42,6 @@ export default function Heatmap() {
       
       if (diffDays === 1) {
         streak++;
-        longest = Math.max(longest, streak);
       } else if (diffDays > 1) {
         streak = 1;
       }
@@ -62,10 +60,11 @@ export default function Heatmap() {
       current = 0;
     }
     
-    return { current, longest };
+    return { current };
   };
 
-  const { current: currentStreak, longest: longestStreak } = calculateStreaks(completedDates);
+  const { current: currentStreak } = calculateStreaks(completedDates);
+  const longestStreak = highestHabitStreak;
 
   const getMonthlyData = () => {
     // Generate dummy data for Architectural Expansion bar chart
