@@ -11,7 +11,6 @@ A modern web app that helps users build consistency through gamified habit track
 - **Gamification (XP, levels, badges)**: (Coming Soon) Earn rewards for sticking to your routines.
 - **Mercy system (skip days and recovery mode)**: (Coming Soon) A forgiving system to help you recover without losing your hard-earned progress.
 - **Responsive and modern UI**: A beautifully crafted, mobile-friendly interface featuring dark mode by default.
-
 ## Tech Stack
 - **React (Vite)**
 - **JavaScript**

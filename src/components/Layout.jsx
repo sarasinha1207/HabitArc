@@ -14,20 +14,61 @@ const INITIAL_HABITS = [
   { id: 3, name: 'Workout', completed: false, streak: 5 },
 ];
 
+const getTodayDateString = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 export default function Layout() {
   const [habits, setHabits] = useState(() => {
     const saved = localStorage.getItem('habitarc_habits');
     return saved ? JSON.parse(saved) : INITIAL_HABITS;
   });
 
+  const [completedDates, setCompletedDates] = useState(() => {
+    const saved = localStorage.getItem('habitarc_dates');
+    // Pre-fill with some past dates for demo purposes
+    if (saved) return JSON.parse(saved);
+    
+    const d = new Date();
+    const pastDates = [];
+    for(let i=4; i>=1; i--) {
+      const past = new Date(d);
+      past.setDate(past.getDate() - i);
+      pastDates.push(`${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}-${String(past.getDate()).padStart(2, '0')}`);
+    }
+    return pastDates;
+  });
+
   useEffect(() => {
     localStorage.setItem('habitarc_habits', JSON.stringify(habits));
   }, [habits]);
 
+  useEffect(() => {
+    localStorage.setItem('habitarc_dates', JSON.stringify(completedDates));
+  }, [completedDates]);
+
   const toggleHabit = (id) => {
-    setHabits(habits.map(h => 
-      h.id === id ? { ...h, completed: !h.completed } : h
-    ));
+    setHabits(prevHabits => {
+      const newHabits = prevHabits.map(h => 
+        h.id === id ? { ...h, completed: !h.completed } : h
+      );
+      
+      const today = getTodayDateString();
+      const hasCompletedToday = newHabits.some(h => h.completed);
+      
+      setCompletedDates(prevDates => {
+        const datesSet = new Set(prevDates);
+        if (hasCompletedToday) {
+          datesSet.add(today);
+        } else {
+          datesSet.delete(today);
+        }
+        return Array.from(datesSet).sort();
+      });
+
+      return newHabits;
+    });
   };
 
   const addHabit = (name) => {
@@ -78,7 +119,7 @@ export default function Layout() {
 
       {/* Main Content */}
       <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8">
-        <Outlet context={{ habits, toggleHabit, addHabit }} />
+        <Outlet context={{ habits, toggleHabit, addHabit, completedDates }} />
       </main>
     </div>
   );

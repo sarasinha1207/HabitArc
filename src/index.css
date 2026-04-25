@@ -7,10 +7,15 @@
   --color-dark-card: #1e293b;
 }
 
-@layer base {
-  body {
-    @apply bg-slate-950 text-slate-50 antialiased selection:bg-purple-500/30;
-  }
+body {
+  background-color: var(--color-slate-950, #020617);
+  color: var(--color-slate-50, #f8fafc);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: rgba(168, 85, 247, 0.3);
 }
 
 /* Custom scrollbar */
@@ -22,8 +27,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-800 rounded-full;
+  background-color: var(--color-slate-800, #1e293b);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-700;
+  background-color: var(--color-slate-700, #334155);
 }
