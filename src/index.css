@@ -33,3 +33,53 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-slate-700, #334155);
 }
+
+/* Heatmap styling */
+.heatmap-container .react-calendar-heatmap {
+  width: 100%;
+}
+
+.heatmap-container .react-calendar-heatmap text {
+  font-size: 10px;
+  fill: #64748b;
+}
+
+.heatmap-container .react-calendar-heatmap .color-empty {
+  fill: #1e293b;
+  rx: 2;
+  ry: 2;
+  transition: fill 0.3s ease-in-out;
+}
+
+.heatmap-container .react-calendar-heatmap rect:hover {
+  stroke: #c084fc;
+  stroke-width: 1px;
+}
+
+.heatmap-container .react-calendar-heatmap .color-scale-1 {
+  fill: #581c87; /* Very dark purple for less tasks */
+  rx: 2;
+  ry: 2;
+  transition: fill 0.3s ease-in-out;
+}
+
+.heatmap-container .react-calendar-heatmap .color-scale-2 {
+  fill: #7e22ce;
+  rx: 2;
+  ry: 2;
+  transition: fill 0.3s ease-in-out;
+}
+
+.heatmap-container .react-calendar-heatmap .color-scale-3 {
+  fill: #a855f7;
+  rx: 2;
+  ry: 2;
+  transition: fill 0.3s ease-in-out;
+}
+
+.heatmap-container .react-calendar-heatmap .color-scale-4 {
+  fill: #e9d5ff; /* Very light purple for more tasks */
+  rx: 2;
+  ry: 2;
+  transition: fill 0.3s ease-in-out;
+}

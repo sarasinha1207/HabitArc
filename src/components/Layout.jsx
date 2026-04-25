@@ -26,16 +26,27 @@ export default function Layout() {
   });
 
   const [completedDates, setCompletedDates] = useState(() => {
-    const saved = localStorage.getItem('habitarc_dates');
-    // Pre-fill with some past dates for demo purposes
-    if (saved) return JSON.parse(saved);
+    const saved = localStorage.getItem('habitarc_dates_v2');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.length > 0 && typeof parsed[0] === 'string') {
+        return parsed.map(date => ({ date, count: 1 }));
+      }
+      return parsed;
+    }
     
     const d = new Date();
     const pastDates = [];
-    for(let i=4; i>=1; i--) {
-      const past = new Date(d);
-      past.setDate(past.getDate() - i);
-      pastDates.push(`${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}-${String(past.getDate()).padStart(2, '0')}`);
+    // Generate sample data for roughly Jan to April (past 120 days)
+    for(let i = 120; i >= 1; i--) {
+      if (Math.random() > 0.3) { // 70% chance to have a habit completed
+        const past = new Date(d);
+        past.setDate(past.getDate() - i);
+        pastDates.push({
+          date: `${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}-${String(past.getDate()).padStart(2, '0')}`,
+          count: Math.floor(Math.random() * 4) + 1
+        });
+      }
     }
     return pastDates;
   });
@@ -45,7 +56,7 @@ export default function Layout() {
   }, [habits]);
 
   useEffect(() => {
-    localStorage.setItem('habitarc_dates', JSON.stringify(completedDates));
+    localStorage.setItem('habitarc_dates_v2', JSON.stringify(completedDates));
   }, [completedDates]);
 
   const toggleHabit = (id) => {
@@ -55,16 +66,23 @@ export default function Layout() {
       );
       
       const today = getTodayDateString();
-      const hasCompletedToday = newHabits.some(h => h.completed);
+      const completedCount = newHabits.filter(h => h.completed).length;
       
       setCompletedDates(prevDates => {
-        const datesSet = new Set(prevDates);
-        if (hasCompletedToday) {
-          datesSet.add(today);
+        let newDates = [...prevDates];
+        const index = newDates.findIndex(d => (typeof d === 'string' ? d : d.date) === today);
+        if (completedCount > 0) {
+          if (index >= 0) {
+            newDates[index] = { date: today, count: completedCount };
+          } else {
+            newDates.push({ date: today, count: completedCount });
+          }
         } else {
-          datesSet.delete(today);
+          if (index >= 0) {
+            newDates = newDates.filter(d => (typeof d === 'string' ? d : d.date) !== today);
+          }
         }
-        return Array.from(datesSet).sort();
+        return newDates.sort((a, b) => (typeof a === 'string' ? a : a.date).localeCompare((typeof b === 'string' ? b : b.date)));
       });
 
       return newHabits;

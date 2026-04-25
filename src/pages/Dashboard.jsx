@@ -1,5 +1,9 @@
 import { useOutletContext } from 'react-router-dom';
 import { Trophy, CheckCircle2, Flame, TrendingUp } from 'lucide-react';
+import CalendarHeatmap from 'react-calendar-heatmap';
+import 'react-calendar-heatmap/dist/styles.css';
+import { Tooltip } from 'react-tooltip';
+import 'react-tooltip/dist/react-tooltip.css';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -17,14 +21,19 @@ export default function Dashboard() {
   const calculateStreaks = (dates) => {
     if (!dates || dates.length === 0) return { current: 0, longest: 0 };
     
-    const sorted = [...dates].sort();
+    const sorted = [...dates].sort((a, b) => {
+      const dateA = typeof a === 'string' ? a : a.date;
+      const dateB = typeof b === 'string' ? b : b.date;
+      return dateA.localeCompare(dateB);
+    });
+
     let current = 1;
     let longest = 1;
     let streak = 1;
     
     for (let i = 1; i < sorted.length; i++) {
-      const prevDate = new Date(sorted[i-1]);
-      const currDate = new Date(sorted[i]);
+      const prevDate = new Date(typeof sorted[i-1] === 'string' ? sorted[i-1] : sorted[i-1].date);
+      const currDate = new Date(typeof sorted[i] === 'string' ? sorted[i] : sorted[i].date);
       const diffTime = Math.abs(currDate - prevDate);
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       
@@ -38,7 +47,8 @@ export default function Dashboard() {
     
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const lastDate = new Date(sorted[sorted.length - 1]);
+    const lastEntry = sorted[sorted.length - 1];
+    const lastDate = new Date(typeof lastEntry === 'string' ? lastEntry : lastEntry.date);
     const todayObj = new Date(todayStr);
     const diffDaysFromToday = Math.round((todayObj - lastDate) / (1000 * 60 * 60 * 24));
     
@@ -52,6 +62,14 @@ export default function Dashboard() {
   };
 
   const { current: currentStreak, longest: longestStreak } = calculateStreaks(completedDates);
+
+  const heatmapValues = completedDates.map(d => 
+    typeof d === 'string' ? { date: d, count: 1 } : d
+  );
+
+  const todayDate = new Date();
+  const startDate = new Date();
+  startDate.setFullYear(todayDate.getFullYear() - 1); // Show last 12 months
 
   const STATS = [
     {
@@ -124,6 +142,40 @@ export default function Dashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Heatmap Section */}
+      <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/30">
+        <h3 className="text-lg font-semibold text-slate-50 mb-6 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-purple-400" /> Consistency Map
+        </h3>
+        <div className="heatmap-container overflow-hidden w-full">
+          <CalendarHeatmap
+            startDate={startDate}
+            endDate={todayDate}
+            values={heatmapValues}
+            classForValue={(value) => {
+              if (!value || value.count === 0) {
+                return 'color-empty';
+              }
+              return `color-scale-${Math.min(value.count, 4)}`;
+            }}
+            tooltipDataAttrs={(value) => {
+              if (!value || !value.date) {
+                return {
+                  'data-tooltip-id': 'heatmap-tooltip',
+                  'data-tooltip-content': 'No habits completed'
+                };
+              }
+              return {
+                'data-tooltip-id': 'heatmap-tooltip',
+                'data-tooltip-content': `${value.count} habit${value.count > 1 ? 's' : ''} completed on ${value.date}`
+              };
+            }}
+            showWeekdayLabels={true}
+          />
+          <Tooltip id="heatmap-tooltip" place="top" effect="solid" className="!bg-slate-800 !text-slate-50 !rounded-lg !shadow-xl !px-3 !py-2 !text-sm" />
+        </div>
       </div>
 
       <div className="p-8 rounded-2xl border border-slate-800 bg-slate-900/30 text-center space-y-4">
