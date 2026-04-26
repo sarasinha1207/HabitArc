@@ -2,7 +2,33 @@
 
 HabitArc is a professional-grade, gamified productivity tracker built to transform daily routines into an engaging, data-driven RPG experience. Using a high-end sci-fi "Neural Command Center" aesthetic, the platform tracks habits, visualizes long-term consistency via heatmaps, and utilizes smart data insights to optimize user performance.
 
-### Project Deployed URL: 
+### 🎯 Product Communication (What, Why, How)
+* **What**: A premium habit-tracking web application that gamifies consistency through experience points, infinite leveling, and visual data analytics.
+* **Why**: Traditional habit trackers lack long-term engagement. HabitArc solves this using behavioral psychology (gamification) and the "Mercy System" to prevent burnout, ensuring users stay motivated even when they falter.
+* **How**: Built strictly on the client-side with React, TailwindCSS, and `localStorage` to ensure zero latency, offline capabilities, and maximum data privacy.
+
+### Deployment Link: 
+---
+
+<table>
+  <tr>
+    <td align="center">
+      <img width="1000" height="750" alt="Main Habit Dashboard" src="https://github.com/user-attachments/assets/cfa717b4-45a3-490f-add3-aa2b487cafad" />
+    </td>
+    <td align="center">
+      <img width="1000" height="750" alt="Simplified Habit Views" src="https://github.com/user-attachments/assets/c60825b3-5fbc-48a6-b24d-f3090df0be6d" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img width="1000" height="750" alt="UI Structure and Sidebar" src="https://github.com/user-attachments/assets/b9b2e231-a750-4f16-8153-2b81462ddec6" />
+    </td>
+    <td align="center">
+      <img width="1000" height="750" alt="Habit List (Inactive State)" src="https://github.com/user-attachments/assets/e641422f-a508-4579-9014-4f635d85e764" />
+    </td>
+  </tr>
+</table>
+
 ---
 
 ## 🚀 Features & Architecture
@@ -66,7 +92,18 @@ Every habit must fall into one of three pillars of personal development:
 * **Advanced**: +50 XP
 * **Streak Bonus**: +50 XP bonus for every 7 consecutive days maintaining a specific habit.
 
+<table>
+  <tr>
+    <td align="center">
+      <img width="1000" height="750" alt="Main Habit Dashboard" src="https://github.com/user-attachments/assets/e58d9beb-3757-47bc-a07e-8b615e57b09e" />
+    </td>
+    <td align="center">
+      <img width="1000" height="750" alt="Simplified Habit Views" src="https://github.com/user-attachments/assets/a6c57eee-14c2-44f5-ac77-ad04fed5832a" />
+    </td>
+  </tr>
+</table>
 ---
+
 
 ## 🛡️ The Mercy System
 
