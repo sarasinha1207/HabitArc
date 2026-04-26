@@ -37,11 +37,11 @@ export default function Profile() {
           <div className="mt-12 relative z-10">
             <div className="flex justify-between items-end mb-2">
               <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">
-                {level < 10 ? `Progression to Level ${level + 1}` : 'Maximum Level Reached'}
+                Progression to Level {level + 1}
               </span>
               <span className="text-cyan-400 font-bold">
                 <span className="text-lg">{totalXP.toLocaleString()}</span> 
-                {level < 10 && ` / ${nextThreshold.toLocaleString()} `}
+                {` / ${nextThreshold.toLocaleString()} `}
                 <span className="text-[10px] font-normal uppercase tracking-wider text-cyan-400/80">XP</span>
               </span>
             </div>

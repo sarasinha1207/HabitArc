@@ -15,14 +15,23 @@ const getXpByDifficulty = (difficulty) => {
 };
 
 const INITIAL_HABITS = [
-  { id: 1, name: 'Hydration Protocol', description: '3L Spring Water + Electrolytes', category: 'Physical', difficulty: 'Beginner', completed: false, streak: 14, xp: 15 },
-  { id: 2, name: 'Strength Conditioning', description: '45min Hypertrophy Session', category: 'Physical', difficulty: 'Advanced', completed: false, streak: 8, xp: 50 },
-  { id: 3, name: 'Mental Clarity', description: '20min Deep Meditation', category: 'Cognitive', difficulty: 'Intermediate', completed: false, streak: 22, xp: 30, isDanger: true },
+  { id: 1, name: 'Hydration Protocol', description: '3L Spring Water + Electrolytes', category: 'Physical', difficulty: 'Beginner', completed: false, streak: 15, xp: 15 },
+  { id: 2, name: 'Strength Conditioning', description: '45min Hypertrophy Session', category: 'Physical', difficulty: 'Advanced', completed: false, streak: 9, xp: 50 },
+  { id: 3, name: 'Mental Clarity', description: '20min Deep Meditation', category: 'Cognitive', difficulty: 'Beginner', completed: false, streak: 22, xp: 15, isDanger: true },
+  { id: 4, name: 'Knowledge Synthesis', description: 'Read 20 Pages of Non-Fiction', category: 'Cognitive', difficulty: 'Beginner', completed: false, streak: 1, xp: 15 },
+  { id: 5, name: 'Financial Audit', description: 'Log Daily Expenses & Budget', category: 'Financial', difficulty: 'Beginner', completed: false, streak: 1, xp: 15 },
+  { id: 6, name: 'Fast Cycle', description: 'Do not eat for 5 hours', category: 'Metabolic', difficulty: 'Intermediate', completed: false, streak: 0, xp: 30 },
+  { id: 7, name: 'Daily Walk', description: 'Walk outside for 40 minutes', category: 'Physical', difficulty: 'Intermediate', completed: false, streak: 0, xp: 30 },
+  { id: 8, name: 'Social Break', description: 'Turn off your phone for 5 hours', category: 'Cognitive', difficulty: 'Intermediate', completed: false, streak: 1, xp: 30 },
 ];
 
 const INITIAL_WEEKLY = [
-  { id: 4, name: 'Meal Prep', description: 'Prepare 5 lunches', category: 'Metabolic', difficulty: 'Advanced', completed: false, streak: 2, xp: 50 },
-  { id: 5, name: 'Read a Book', description: 'Finish 1 book this week', category: 'Cognitive', difficulty: 'Intermediate', completed: false, streak: 5, xp: 30 },
+  { id: 101, name: 'Meal Prep', description: 'Prepare 5 lunches', category: 'Metabolic', difficulty: 'Advanced', completed: false, streak: 2, xp: 50 },
+  { id: 102, name: 'Read a Book', description: 'Finish 1 book this week', category: 'Cognitive', difficulty: 'Intermediate', completed: false, streak: 5, xp: 30 },
+  { id: 103, name: 'Deep Clean', description: 'Full apartment reset', category: 'Physical', difficulty: 'Intermediate', completed: false, streak: 4, xp: 30 },
+  { id: 104, name: 'Review Goals', description: 'Weekly planning & reflection', category: 'Cognitive', difficulty: 'Beginner', completed: false, streak: 8, xp: 15 },
+  { id: 105, name: 'Long Run', description: '10km weekend run', category: 'Physical', difficulty: 'Advanced', completed: false, streak: 1, xp: 50 },
+  { id: 106, name: 'Call Family', description: 'Catch up with parents/siblings', category: 'Social', difficulty: 'Beginner', completed: false, streak: 12, xp: 15 },
 ];
 
 const getTodayDateString = () => {
@@ -414,16 +423,17 @@ export default function Layout() {
   const longestStreak = highestHabitStreak;
 
   const getLevelInfo = (xp) => {
-    const thresholds = [0, 100, 250, 500, 800, 1200, 1700, 2300, 3000, 4000];
     let level = 1;
-    for (let i = 0; i < thresholds.length; i++) {
-      if (xp >= thresholds[i]) {
-        level = i + 1;
-      }
+    let nextThreshold = 100;
+    let currentThreshold = 0;
+    
+    while (xp >= nextThreshold) {
+      level++;
+      currentThreshold = nextThreshold;
+      nextThreshold = level * level * 100;
     }
-    const currentThreshold = thresholds[level - 1] || 0;
-    const nextThreshold = level < 10 ? thresholds[level] : xp;
-    const progress = level === 10 ? 100 : ((xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
+    
+    const progress = ((xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
 
     return { level, progress, currentThreshold, nextThreshold };
   };
@@ -515,7 +525,7 @@ export default function Layout() {
               <div className="bg-emerald-400 h-full transition-all duration-500" style={{ width: `${levelInfo.progress}%` }} />
             </div>
             <div className="flex justify-between mt-1.5 text-[10px] text-slate-500 font-medium tracking-wide">
-              <span>XP: {totalXP.toLocaleString()} {levelInfo.level < 10 ? `/ ${levelInfo.nextThreshold}` : ' (MAX)'}</span>
+              <span>XP: {totalXP.toLocaleString()} / {levelInfo.nextThreshold.toLocaleString()}</span>
               <span>{Math.round(levelInfo.progress)}%</span>
             </div>
           </div>
