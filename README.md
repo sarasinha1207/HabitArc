@@ -7,7 +7,7 @@ HabitArc is a professional-grade, gamified productivity tracker built to transfo
 * **Why**: Traditional habit trackers lack long-term engagement. HabitArc solves this using behavioral psychology (gamification) and the "Mercy System" to prevent burnout, ensuring users stay motivated even when they falter.
 * **How**: Built strictly on the client-side with React, TailwindCSS, and `localStorage` to ensure zero latency, offline capabilities, and maximum data privacy.
 
-### Deployment Link: 
+### Deployment Link: https://habitarc-psi.vercel.app/
 ---
 
 <table>
