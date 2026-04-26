@@ -8,13 +8,10 @@ function cn(...inputs) {
 }
 
 export default function Profile() {
-  const { totalXP, mercySkips, useSkipDay, completedDates } = useOutletContext();
+  const { totalXP, mercySkips, useSkipDay, completedDates, badges, levelInfo } = useOutletContext();
   const navigate = useNavigate();
 
-  const level = Math.floor(totalXP / 1000) + 28;
-  const xpIntoLevel = totalXP % 10000;
-  const xpNeeded = 10000;
-  const progressPercent = Math.min(100, Math.round((xpIntoLevel / xpNeeded) * 100));
+  const { level, progress, currentThreshold, nextThreshold } = levelInfo;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-24">
@@ -39,11 +36,17 @@ export default function Profile() {
           
           <div className="mt-12 relative z-10">
             <div className="flex justify-between items-end mb-2">
-              <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Progression to Level {level + 1}</span>
-              <span className="text-cyan-400 font-bold"><span className="text-lg">{xpIntoLevel.toLocaleString()}</span> / {xpNeeded.toLocaleString()} <span className="text-[10px] font-normal uppercase tracking-wider text-cyan-400/80">XP</span></span>
+              <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">
+                {level < 10 ? `Progression to Level ${level + 1}` : 'Maximum Level Reached'}
+              </span>
+              <span className="text-cyan-400 font-bold">
+                <span className="text-lg">{totalXP.toLocaleString()}</span> 
+                {level < 10 && ` / ${nextThreshold.toLocaleString()} `}
+                <span className="text-[10px] font-normal uppercase tracking-wider text-cyan-400/80">XP</span>
+              </span>
             </div>
             <div className="w-full h-3 bg-[#0B1120] rounded-full overflow-hidden border border-slate-800">
-              <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${progressPercent}%` }} />
+              <div className="h-full bg-cyan-400 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
           </div>
           
@@ -77,7 +80,7 @@ export default function Profile() {
               <Award className="w-5 h-5 text-orange-400" />
               <span className="text-sm font-medium text-slate-400">Total Badges</span>
             </div>
-            <span className="text-xl font-bold text-slate-100">68</span>
+            <span className="text-xl font-bold text-slate-100">{badges.length}</span>
           </div>
         </div>
       </div>
@@ -131,33 +134,28 @@ export default function Profile() {
           </div>
           
           <div className="space-y-4 flex-1">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
-                <Flame className="w-5 h-5 text-orange-400" />
+            {badges.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <Award className="w-8 h-8 text-slate-600 mb-3" />
+                <p className="text-slate-500 text-sm">No badges unlocked yet.</p>
+                <p className="text-slate-600 text-xs mt-1">Keep synchronizing pathways!</p>
               </div>
-              <div>
-                <h4 className="text-sm font-bold text-slate-200">7-Day Streak</h4>
-                <p className="text-xs text-slate-500">Flame-born momentum</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-5 h-5 text-cyan-400" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-slate-200">Perfect Day</h4>
-                <p className="text-xs text-slate-500">All targets locked & cleared</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                <HeartPulse className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-slate-200">Recovery Heart</h4>
-                <p className="text-xs text-slate-500">Resilience after a break</p>
-              </div>
-            </div>
+            ) : (
+              badges.slice(-4).reverse().map((badge) => (
+                <div key={badge.id} className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-12 h-12 rounded-xl border flex items-center justify-center shrink-0",
+                    badge.id === 'streak_7' ? "bg-orange-500/10 border-orange-500/20" : "bg-cyan-500/10 border-cyan-500/20"
+                  )}>
+                    {badge.id === 'streak_7' ? <Flame className="w-5 h-5 text-orange-400" /> : <Star className="w-5 h-5 text-cyan-400" />}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-200">{badge.title}</h4>
+                    <p className="text-xs text-slate-500">{badge.description}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           
           <button className="w-full mt-6 py-3 rounded-xl border border-slate-700 text-slate-400 text-sm font-semibold hover:bg-slate-800 transition-colors">

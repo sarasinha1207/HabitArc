@@ -105,6 +105,40 @@ export default function Help() {
           </div>
         </section>
 
+        {/* Mercy System Mechanics */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-rose-400 rounded-full inline-block" />
+            The Mercy System
+          </h2>
+          <div className="p-8 rounded-2xl border border-rose-500/20 bg-rose-500/5 hover:border-rose-500/40 transition-colors">
+            <h3 className="text-xl font-bold text-slate-100 mb-4 flex items-center gap-2">
+              <ShieldAlert className="w-6 h-6 text-rose-400" /> What is a Shield?
+            </h3>
+            <p className="text-slate-300 leading-relaxed mb-6">
+              The Mercy System is your safety net. Life is unpredictable, and punishing a broken streak due to an emergency or burnout goes against the core philosophy of HabitArc. A <strong>Shield</strong> allows you to skip a day of habits without losing your active streak multiplier.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-[#0B1120] p-5 rounded-xl border border-slate-800">
+                <h4 className="font-bold text-emerald-400 mb-2">When to use it:</h4>
+                <ul className="text-sm text-slate-400 space-y-2 list-disc pl-4">
+                  <li>Sudden illness or physical burnout</li>
+                  <li>Unplanned emergencies preventing access</li>
+                  <li>Strategic rest days for heavy physical quests</li>
+                </ul>
+              </div>
+              <div className="bg-[#0B1120] p-5 rounded-xl border border-slate-800">
+                <h4 className="font-bold text-rose-400 mb-2">How to use it:</h4>
+                <ul className="text-sm text-slate-400 space-y-2 list-disc pl-4">
+                  <li>Navigate to the <strong>Heatmap</strong> page</li>
+                  <li>Click the <strong>"Use Shield"</strong> button under the Mercy System active module</li>
+                  <li>The current day will be marked as skipped, protecting your streak count.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* FAQs */}

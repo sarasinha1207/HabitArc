@@ -15,56 +15,12 @@ function cn(...inputs) {
 }
 
 export default function Heatmap() {
-  const { habits, completedDates, mercySkips, useSkipDay, highestHabitStreak } = useOutletContext();
+  const { habits, completedDates, mercySkips, useSkipDay, currentStreak, longestStreak } = useOutletContext();
   const navigate = useNavigate();
   
   const total = habits.length;
   const completed = habits.filter(h => h.completed).length;
   const completionRate = total === 0 ? 0 : Math.round((completed / total) * 100);
-  
-  const calculateStreaks = (dates) => {
-    if (!dates || dates.length === 0) return { current: 0 };
-    
-    const sorted = [...dates].sort((a, b) => {
-      const dateA = typeof a === 'string' ? a : a.date;
-      const dateB = typeof b === 'string' ? b : b.date;
-      return dateA.localeCompare(dateB);
-    });
-
-    let current = 1;
-    let streak = 1;
-    
-    for (let i = 1; i < sorted.length; i++) {
-      const prevDate = new Date(typeof sorted[i-1] === 'string' ? sorted[i-1] : sorted[i-1].date);
-      const currDate = new Date(typeof sorted[i] === 'string' ? sorted[i] : sorted[i].date);
-      const diffTime = Math.abs(currDate - prevDate);
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) {
-        streak++;
-      } else if (diffDays > 1) {
-        streak = 1;
-      }
-    }
-    
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const lastEntry = sorted[sorted.length - 1];
-    const lastDate = new Date(typeof lastEntry === 'string' ? lastEntry : lastEntry.date);
-    const todayObj = new Date(todayStr);
-    const diffDaysFromToday = Math.round((todayObj - lastDate) / (1000 * 60 * 60 * 24));
-    
-    if (diffDaysFromToday <= 1) {
-      current = streak;
-    } else {
-      current = 0;
-    }
-    
-    return { current };
-  };
-
-  const { current: currentStreak } = calculateStreaks(completedDates);
-  const longestStreak = highestHabitStreak;
 
   const getMonthlyData = () => {
     // Generate dummy data for Architectural Expansion bar chart
@@ -83,11 +39,11 @@ export default function Heatmap() {
   );
 
   const todayDate = new Date();
-  const todayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
-  const startDate = new Date();
-  startDate.setFullYear(todayDate.getFullYear() - 1);
+  const currentYear = todayDate.getFullYear();
+  const startDate = new Date(currentYear, 0, 1);
+  const endDate = new Date(currentYear, 11, 31);
 
-  const completedToday = completedDates.some(d => (typeof d === 'string' ? d : d.date) === todayStr && (typeof d === 'string' || d.count > 0 || d.isSkip));
+  const completedToday = completedDates.some(d => (typeof d === 'string' ? d : d.date) === `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}` && (typeof d === 'string' || d.count > 0 || d.isSkip));
   const isRecoveryMode = currentStreak === 0 && longestStreak > 0;
 
   return (
@@ -121,7 +77,7 @@ export default function Heatmap() {
           <div className="heatmap-container overflow-hidden w-full">
             <CalendarHeatmap
               startDate={startDate}
-              endDate={todayDate}
+              endDate={endDate}
               values={heatmapValues}
               classForValue={(value) => {
                 if (!value || value.count === 0) {
@@ -130,15 +86,15 @@ export default function Heatmap() {
                 return `color-scale-${Math.min(value.count, 4)}`;
               }}
               tooltipDataAttrs={(value) => {
-                if (!value || !value.date) {
+                if (!value || !value.date || value.count === 0) {
                   return {
                     'data-tooltip-id': 'heatmap-tooltip',
-                    'data-tooltip-content': 'No nodes activated'
+                    'data-tooltip-content': '0 habits completed on this day'
                   };
                 }
                 return {
                   'data-tooltip-id': 'heatmap-tooltip',
-                  'data-tooltip-content': `${value.count} node${value.count > 1 ? 's' : ''} synchronized on ${value.date}`
+                  'data-tooltip-content': `${value.count} habit${value.count > 1 ? 's' : ''} completed on this day`
                 };
               }}
               showWeekdayLabels={true}

@@ -43,7 +43,7 @@ export default function Layout() {
 
   const [totalXP, setTotalXP] = useState(() => {
     const saved = localStorage.getItem('habitarc_xp');
-    return saved ? parseInt(saved, 10) : 14200;
+    return saved ? parseInt(saved, 10) : 850;
   });
 
   const [completedDates, setCompletedDates] = useState(() => {
@@ -115,6 +115,30 @@ export default function Layout() {
     });
   };
 
+  const [badges, setBadges] = useState(() => {
+    const saved = localStorage.getItem('habitarc_badges');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [unlockedBadge, setUnlockedBadge] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem('habitarc_badges', JSON.stringify(badges));
+  }, [badges]);
+
+  const unlockBadge = (id, title, iconStr, description) => {
+    setBadges(prev => {
+      if (!prev.find(b => b.id === id)) {
+        const newBadge = { id, title, icon: iconStr, description, date: getTodayDateString() };
+        setUnlockedBadge(newBadge);
+        setTimeout(() => setUnlockedBadge(null), 4000);
+        setTotalXP(curr => curr + 100); // 100 XP Bonus for badges!
+        return [...prev, newBadge];
+      }
+      return prev;
+    });
+  };
+
   const handleToggle = (id, type) => {
     const list = type === 'weekly' ? weeklyHabits : habits;
     const setList = type === 'weekly' ? setWeeklyHabits : setHabits;
@@ -123,8 +147,15 @@ export default function Layout() {
     if (!habit) return;
 
     const isNowCompleted = !habit.completed;
-    const xpGained = habit.xp || getXpByDifficulty(habit.difficulty);
+    let xpGained = habit.xp || getXpByDifficulty(habit.difficulty);
     
+    const newStreak = isNowCompleted ? habit.streak + 1 : Math.max(0, habit.streak - 1);
+    
+    // Bonus XP for streak milestones (every 7 days)
+    if (isNowCompleted && newStreak > 0 && newStreak % 7 === 0) {
+      xpGained += 50;
+    }
+
     // 1. Update XP
     setTotalXP(curr => curr + (isNowCompleted ? xpGained : -xpGained));
 
@@ -136,7 +167,7 @@ export default function Layout() {
           return {
             ...h,
             completed: isNowCompleted,
-            streak: isNowCompleted ? h.streak + 1 : Math.max(0, h.streak - 1)
+            streak: newStreak
           };
         }
         return h;
@@ -144,13 +175,22 @@ export default function Layout() {
       return newList;
     });
 
-    // 3. Update completedDates (only for daily habits)
+    // Check for 7-Day Streak Badge
+    if (isNowCompleted && newStreak === 7) {
+      unlockBadge('streak_7', '7-Day Streak', 'Flame', 'Reached a 7-day streak on a neural pathway.');
+    }
+
+    // 3. Update completedDates & Perfect Day Badge (only for daily habits)
     if (type !== 'weekly') {
       const today = getTodayDateString();
-      // We calculate completedCount based on the updated habit state
       const updatedList = list.map(h => h.id === id ? { ...h, completed: isNowCompleted } : h);
       const completedCount = updatedList.filter(h => h.completed).length;
       
+      // Check for Perfect Day Badge
+      if (isNowCompleted && completedCount === list.length && list.length > 0) {
+        unlockBadge('perfect_day', 'Perfect Day', 'Star', 'Completed all daily neural pathways.');
+      }
+
       setCompletedDates(prevDates => {
         let newDates = [...prevDates];
         const index = newDates.findIndex(d => (typeof d === 'string' ? d : d.date) === today);
@@ -189,8 +229,28 @@ export default function Layout() {
   const deleteHabit = (id, type) => {
     const list = type === 'weekly' ? weeklyHabits : habits;
     const habit = list.find(h => h.id === id);
-    if (habit && habit.completed) {
+    if (!habit) return;
+
+    if (habit.completed) {
       setTotalXP(curr => curr - (habit.xp || getXpByDifficulty(habit.difficulty)));
+      
+      // Update heatmap for today if it was a completed daily habit
+      if (type !== 'weekly') {
+        const today = getTodayDateString();
+        setCompletedDates(prevDates => {
+          let newDates = [...prevDates];
+          const index = newDates.findIndex(d => (typeof d === 'string' ? d : d.date) === today);
+          if (index >= 0) {
+            const newCount = Math.max(0, newDates[index].count - 1);
+            if (newCount === 0 && !newDates[index].isSkip) {
+              newDates = newDates.filter((_, i) => i !== index);
+            } else {
+              newDates[index] = { ...newDates[index], count: newCount };
+            }
+          }
+          return newDates;
+        });
+      }
     }
     
     const setList = type === 'weekly' ? setWeeklyHabits : setHabits;
@@ -237,32 +297,62 @@ export default function Layout() {
     return current;
   };
 
-  const currentStreakVal = calculateOverallStreak(completedDates);
-  const level = Math.floor(totalXP / 1000) + 28;
+  const currentStreak = calculateOverallStreak(completedDates);
+  const longestStreak = highestHabitStreak;
+
+  const getLevelInfo = (xp) => {
+    const thresholds = [0, 100, 250, 500, 800, 1200, 1700, 2300, 3000, 4000];
+    let level = 1;
+    for (let i = 0; i < thresholds.length; i++) {
+      if (xp >= thresholds[i]) {
+        level = i + 1;
+      }
+    }
+    const currentThreshold = thresholds[level - 1] || 0;
+    const nextThreshold = level < 10 ? thresholds[level] : xp;
+    const progress = level === 10 ? 100 : ((xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
+    
+    return { level, progress, currentThreshold, nextThreshold };
+  };
+
+  const levelInfo = getLevelInfo(totalXP);
 
   return (
     <div className="min-h-screen flex bg-[#0B1120] text-slate-100 font-sans selection:bg-cyan-500/30">
-      
+      {/* Badge Notification Overlay */}
+      {unlockedBadge && (
+        <div className="fixed bottom-8 right-8 z-[100] bg-[#111827] border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] rounded-2xl p-6 w-80 flex gap-4 animate-in slide-in-from-bottom-8 fade-in duration-500">
+          <div className="w-12 h-12 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shrink-0">
+            <Award className="w-6 h-6 text-cyan-400" />
+          </div>
+          <div>
+            <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mb-1">Badge Unlocked! +100 XP</p>
+            <h4 className="text-lg font-bold text-slate-100">{unlockedBadge.title}</h4>
+            <p className="text-xs text-slate-400 mt-1">{unlockedBadge.description}</p>
+          </div>
+        </div>
+      )}
+
       <aside className="w-64 fixed inset-y-0 left-0 bg-[#060B14] border-r border-slate-800/60 flex flex-col items-center py-8 z-50">
         <div className="flex flex-col items-center gap-3 mb-10 w-full px-6">
           <div className="w-16 h-16 rounded-full bg-slate-800 p-1 border-2 border-emerald-500 relative">
             <img src="https://i.pravatar.cc/150?img=47" alt="Avatar" className="w-full h-full rounded-full object-cover" />
             <span className="absolute -bottom-2 -right-2 bg-emerald-500 text-[#060B14] text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#060B14]">
-              {level}
+              {levelInfo.level}
             </span>
           </div>
           <div className="text-center w-full">
             <h2 className="text-xl font-bold text-teal-400 italic mb-0.5">HabitArc</h2>
-            <p className="text-xs text-slate-200 font-semibold">Level {level} Architect</p>
+            <p className="text-xs text-slate-200 font-semibold">Level {levelInfo.level} Architect</p>
             <p className="text-[10px] text-slate-500 font-medium">Elite Tier</p>
           </div>
           <div className="w-full mt-4">
             <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-emerald-400 h-full" style={{ width: `${(totalXP % 1000) / 10}%` }} />
+              <div className="bg-emerald-400 h-full transition-all duration-500" style={{ width: `${levelInfo.progress}%` }} />
             </div>
             <div className="flex justify-between mt-1.5 text-[10px] text-slate-500 font-medium tracking-wide">
-              <span>XP: {totalXP.toLocaleString()}</span>
-              <span>{(totalXP % 1000) / 10}%</span>
+              <span>XP: {totalXP.toLocaleString()} {levelInfo.level < 10 ? `/ ${levelInfo.nextThreshold}` : ' (MAX)'}</span>
+              <span>{Math.round(levelInfo.progress)}%</span>
             </div>
           </div>
         </div>
@@ -323,7 +413,7 @@ export default function Layout() {
               <Award className="w-5 h-5 cursor-pointer hover:text-slate-200 transition-colors" />
               <div className="flex items-center gap-1.5 bg-emerald-900/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/20">
                 <Zap className="w-3.5 h-3.5" />
-                {currentStreakVal} Day Streak
+                {currentStreak} Day Streak
               </div>
             </div>
             <button className="px-4 py-1.5 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 rounded-full text-sm font-semibold transition-all">
@@ -336,8 +426,10 @@ export default function Layout() {
           <Outlet context={{ 
             habits, weeklyHabits, toggleHabit, toggleWeeklyHabit, 
             addOrUpdateHabit, deleteHabit,
-            completedDates, mercySkips, useSkipDay, totalXP, highestHabitStreak,
-            isQuestModalOpen, setIsQuestModalOpen
+            completedDates, mercySkips, useSkipDay, totalXP,
+            currentStreak, longestStreak,
+            isQuestModalOpen, setIsQuestModalOpen,
+            badges, levelInfo
           }} />
         </main>
       </div>

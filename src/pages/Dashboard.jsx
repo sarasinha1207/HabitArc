@@ -9,11 +9,60 @@ function cn(...inputs) {
 }
 
 export default function Dashboard() {
-  const { habits, completedDates, highestHabitStreak } = useOutletContext();
+  const { habits, completedDates, longestStreak } = useOutletContext();
   
   const completedTodayCount = habits.filter(h => h.completed).length;
   const totalCount = habits.length;
   const completionRate = totalCount === 0 ? 0 : Math.round((completedTodayCount / totalCount) * 100);
+
+  // --- Smart Insights Logic ---
+  const today = new Date();
+  
+  // 1. Weekly Trends (This Week vs Last Week)
+  let thisWeekCount = 0;
+  let lastWeekCount = 0;
+  
+  completedDates.forEach(d => {
+    const dateObj = new Date(typeof d === 'string' ? d : d.date);
+    const diffDays = Math.floor((today - dateObj) / (1000 * 60 * 60 * 24));
+    const count = typeof d === 'string' ? 1 : d.count;
+    if (diffDays <= 7) {
+      thisWeekCount += count;
+    } else if (diffDays <= 14) {
+      lastWeekCount += count;
+    }
+  });
+
+  const weeklyDiff = thisWeekCount - lastWeekCount;
+  const weeklyDiffPercent = lastWeekCount === 0 ? 100 : Math.round((weeklyDiff / lastWeekCount) * 100);
+  const weeklyDiffStr = weeklyDiff >= 0 ? `+${weeklyDiffPercent}%` : `${weeklyDiffPercent}%`;
+
+  // 2. Success Velocity (Past 30 days completion rate)
+  const past30DaysCount = completedDates.filter(d => {
+    const diff = (today - new Date(typeof d === 'string' ? d : d.date)) / (1000 * 60 * 60 * 24);
+    return diff <= 30;
+  }).reduce((acc, d) => acc + (typeof d === 'string' ? 1 : d.count), 0);
+  const expected30Days = Math.max(1, totalCount * 30);
+  const successVelocity = Math.min(100, Math.round((past30DaysCount / expected30Days) * 100));
+
+  // 3. Most Productive Day
+  const daysOfWeek = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+  let dayCounts = [0, 0, 0, 0, 0, 0, 0];
+  completedDates.forEach(d => {
+    const dateObj = new Date(typeof d === 'string' ? d : d.date);
+    if (!isNaN(dateObj.getTime())) {
+      dayCounts[dateObj.getDay()] += (typeof d === 'string' ? 1 : d.count);
+    }
+  });
+  const bestDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
+  const bestDay = Math.max(...dayCounts) > 0 ? daysOfWeek[bestDayIndex] : 'certain days';
+
+  // 4. Least Completed Habit
+  let leastCompletedHabitName = "certain tasks";
+  if (habits.length > 0) {
+    const sortedByStreak = [...habits].sort((a, b) => (a.streak || 0) - (b.streak || 0));
+    leastCompletedHabitName = sortedByStreak[0].name;
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
@@ -80,10 +129,12 @@ export default function Dashboard() {
         <div className="p-6 rounded-2xl border-l-4 border-cyan-400 border-y border-r border-slate-800 bg-[#111827]">
           <div className="flex justify-between items-start mb-4">
             <CheckCircle2 className="w-5 h-5 text-cyan-400" />
-            <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded">+12%</span>
+            <span className={cn("px-2 py-0.5 text-[10px] font-bold rounded", weeklyDiff >= 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-orange-500/20 text-orange-400")}>
+              {weeklyDiffStr}
+            </span>
           </div>
           <p className="text-slate-400 text-sm mb-1">Habits Completed</p>
-          <h3 className="text-4xl font-bold text-slate-100 mb-2">58</h3>
+          <h3 className="text-4xl font-bold text-slate-100 mb-2">{thisWeekCount}</h3>
           <p className="text-[10px] text-slate-500">This week vs last week</p>
         </div>
         
@@ -93,8 +144,8 @@ export default function Dashboard() {
             <span className="text-[10px] text-slate-500 font-bold">Average</span>
           </div>
           <p className="text-slate-400 text-sm mb-1">Success Velocity</p>
-          <h3 className="text-4xl font-bold text-slate-100 mb-2">84%</h3>
-          <p className="text-[10px] text-slate-500">Consistency rating across all hubs</p>
+          <h3 className="text-4xl font-bold text-slate-100 mb-2">{successVelocity}%</h3>
+          <p className="text-[10px] text-slate-500">Consistency rating (30 days)</p>
         </div>
 
         <div className="p-6 rounded-2xl border-l-4 border-orange-400 border-y border-r border-slate-800 bg-[#111827]">
@@ -102,10 +153,10 @@ export default function Dashboard() {
             <History className="w-5 h-5 text-orange-400" />
             <span className="text-[10px] text-orange-400/80 font-bold flex items-center gap-1">Streak Peak <span>🔥</span></span>
           </div>
-          <p className="text-slate-400 text-sm mb-1">Current Streak</p>
-          <h3 className="text-4xl font-bold text-slate-100 mb-4">{highestHabitStreak} <span className="text-xl text-slate-500 font-medium">/ 22</span></h3>
+          <p className="text-slate-400 text-sm mb-1">Longest Streak</p>
+          <h3 className="text-4xl font-bold text-slate-100 mb-4">{longestStreak} <span className="text-xl text-slate-500 font-medium">/ 22</span></h3>
           <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-orange-400 rounded-full" style={{ width: `${Math.min(100, (highestHabitStreak / 22) * 100)}%` }} />
+            <div className="h-full bg-orange-400 rounded-full" style={{ width: `${Math.min(100, (longestStreak / 22) * 100)}%` }} />
           </div>
         </div>
       </div>
@@ -125,21 +176,21 @@ export default function Dashboard() {
             </div>
             <div>
               <span className="px-2 py-0.5 bg-cyan-900/40 text-cyan-400 text-[10px] font-bold rounded border border-cyan-500/20 mb-2 inline-block">Peak Performance</span>
-              <h4 className="text-lg font-bold text-slate-100 mb-2">You perform best on Mondays</h4>
+              <h4 className="text-lg font-bold text-slate-100 mb-2">You perform best on {bestDay}</h4>
               <p className="text-sm text-slate-400 leading-relaxed">
-                Data shows a 94% completion rate on the start of the week. Consider scheduling your "Heavy Quests" for this window to maximize XP.
+                Historical logs show maximum task synchronization on this day. Consider scheduling "Heavy Quests" for this window to maximize XP.
               </p>
             </div>
           </div>
           <div className="p-6 rounded-2xl border border-slate-800 bg-[#111827] flex gap-5">
             <div className="w-14 h-14 rounded-xl bg-[#0B1120] border border-slate-800 flex items-center justify-center shrink-0">
-              <Lightbulb className="w-6 h-6 text-emerald-400" />
+              <Lightbulb className="w-6 h-6 text-orange-400" />
             </div>
             <div>
-              <span className="px-2 py-0.5 bg-emerald-900/40 text-emerald-400 text-[10px] font-bold rounded border border-emerald-500/20 mb-2 inline-block">Correlation Found</span>
-              <h4 className="text-lg font-bold text-slate-100 mb-2">Morning Sunlight x Deep Work</h4>
+              <span className="px-2 py-0.5 bg-orange-900/40 text-orange-400 text-[10px] font-bold rounded border border-orange-500/20 mb-2 inline-block">Vulnerability Detected</span>
+              <h4 className="text-lg font-bold text-slate-100 mb-2">You skip '{leastCompletedHabitName}' most often</h4>
               <p className="text-sm text-slate-400 leading-relaxed">
-                When you log 'Morning Sunlight' before 9 AM, your 'Deep Work' habit completion increases by 22% later in the day.
+                This pathway has the lowest momentum. Consider temporarily lowering the difficulty or using a Shield to rebuild consistency safely.
               </p>
             </div>
           </div>
