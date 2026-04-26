@@ -120,16 +120,32 @@ export default function Home() {
   
   const [showConfetti, setShowConfetti] = useState(false);
   const [viewMode, setViewMode] = useState('daily');
+  const [selectedDate, setSelectedDate] = useState('today');
   const [editingHabit, setEditingHabit] = useState(null);
   const [habitToDelete, setHabitToDelete] = useState(null);
   const { width, height } = useWindowSize();
 
-  const currentList = viewMode === 'daily' ? habits : weeklyHabits;
+  const getDisplayList = () => {
+    if (selectedDate === 'today') {
+      return viewMode === 'daily' ? habits : weeklyHabits;
+    }
+    // Dummy past data
+    return [
+      { id: 101, name: 'Hydration Protocol', description: '3L Spring Water + Electrolytes', category: 'Metabolic', difficulty: 'Beginner', completed: true, streak: 12, xp: 15 },
+      { id: 102, name: 'Strength Conditioning', description: '45min Hypertrophy Session', category: 'Physical', difficulty: 'Advanced', completed: selectedDate !== '2026-04-24', streak: 6, xp: 50 },
+      { id: 103, name: 'Mental Clarity', description: '20min Deep Meditation', category: 'Cognitive', difficulty: 'Intermediate', completed: true, streak: 20, xp: 30 }
+    ];
+  };
+
+  const currentList = getDisplayList();
+  const isHistorical = selectedDate !== 'today';
+  
   const completedCount = currentList.filter(h => h.completed).length;
   const totalCount = currentList.length;
   const completionRate = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   const handleToggleHabit = (id) => {
+    if (isHistorical) return;
     const habit = currentList.find(h => h.id === id);
     if (!habit.completed) {
       setShowConfetti(true);
@@ -250,21 +266,35 @@ export default function Home() {
           <svg className="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
           </svg>
-          Active Neural Pathways
+          {selectedDate === 'today' ? 'Active Neural Pathways' : 'Historical Archive'}
         </h2>
-        <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50 relative z-10">
-          <button 
-            onClick={() => setViewMode('daily')}
-            className={cn("px-4 py-1.5 text-xs font-bold rounded-md shadow-sm transition-colors", viewMode === 'daily' ? "text-slate-200 bg-slate-700" : "text-slate-500 hover:text-slate-300")}
-          >
-            Daily
-          </button>
-          <button 
-            onClick={() => setViewMode('weekly')}
-            className={cn("px-4 py-1.5 text-xs font-bold rounded-md shadow-sm transition-colors", viewMode === 'weekly' ? "text-slate-200 bg-slate-700" : "text-slate-500 hover:text-slate-300")}
-          >
-            Weekly
-          </button>
+        <div className="flex items-center gap-4">
+          <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50 relative z-10">
+            <select 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-transparent text-xs font-bold text-slate-300 focus:outline-none appearance-none px-4 py-1.5 cursor-pointer hover:text-slate-100"
+            >
+              <option value="today">Today</option>
+              <option value="2026-04-25">25 April 2026</option>
+              <option value="2026-04-24">24 April 2026</option>
+              <option value="2026-04-23">23 April 2026</option>
+            </select>
+          </div>
+          <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50 relative z-10">
+            <button 
+              onClick={() => setViewMode('daily')}
+              className={cn("px-4 py-1.5 text-xs font-bold rounded-md shadow-sm transition-colors", viewMode === 'daily' ? "text-slate-200 bg-slate-700" : "text-slate-500 hover:text-slate-300")}
+            >
+              Daily
+            </button>
+            <button 
+              onClick={() => setViewMode('weekly')}
+              className={cn("px-4 py-1.5 text-xs font-bold rounded-md shadow-sm transition-colors", viewMode === 'weekly' ? "text-slate-200 bg-slate-700" : "text-slate-500 hover:text-slate-300")}
+            >
+              Weekly
+            </button>
+          </div>
         </div>
       </div>
 
@@ -314,16 +344,18 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6 pr-2 shrink-0">
+                  <div className="flex items-center gap-6 pr-2 shrink-0">
                   {/* Action Icons (Hover) */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 mr-2">
-                    <button onClick={() => handleEdit(habit)} className="p-2 text-slate-500 hover:text-cyan-400 transition-colors bg-[#0B1120] rounded-lg border border-slate-800 hover:border-cyan-500/50">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => setHabitToDelete(habit.id)} className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-[#0B1120] rounded-lg border border-slate-800 hover:border-red-500/50 z-20 relative">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {!isHistorical && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 mr-2">
+                      <button onClick={() => handleEdit(habit)} className="p-2 text-slate-500 hover:text-cyan-400 transition-colors bg-[#0B1120] rounded-lg border border-slate-800 hover:border-cyan-500/50">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => setHabitToDelete(habit.id)} className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-[#0B1120] rounded-lg border border-slate-800 hover:border-red-500/50 z-20 relative">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
 
                   <div className="flex flex-col items-center justify-center">
                     <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Streak</span>
@@ -355,12 +387,14 @@ export default function Home() {
           })}
         </AnimatePresence>
 
-        <button 
-          onClick={() => { setEditingHabit(null); setIsQuestModalOpen(true); }}
-          className="w-full mt-6 py-5 rounded-xl border border-dashed border-cyan-500/30 text-cyan-500/70 font-semibold hover:bg-cyan-500/5 hover:text-cyan-400 hover:border-cyan-400 transition-all flex items-center justify-center gap-2"
-        >
-          <Plus className="w-5 h-5" /> Initialize New Pathway
-        </button>
+        {!isHistorical && (
+          <button 
+            onClick={() => { setEditingHabit(null); setIsQuestModalOpen(true); }}
+            className="w-full mt-6 py-5 rounded-xl border border-dashed border-cyan-500/30 text-cyan-500/70 font-semibold hover:bg-cyan-500/5 hover:text-cyan-400 hover:border-cyan-400 transition-all flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5" /> Initialize New Pathway
+          </button>
+        )}
       </div>
     </div>
   );

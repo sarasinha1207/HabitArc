@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Home, LayoutDashboard, TrendingUp, User, Plus, Settings, HelpCircle, Bell, Award, Zap } from 'lucide-react';
+import { Home, LayoutDashboard, TrendingUp, User, Plus, Settings, HelpCircle, Bell, Award, Zap, X, Download, Upload } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -77,6 +77,7 @@ export default function Layout() {
   });
 
   const [isQuestModalOpen, setIsQuestModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('habitarc_habits_v2', JSON.stringify(habits));
@@ -103,6 +104,11 @@ export default function Layout() {
     
     const today = getTodayDateString();
     
+    setSkipHistory(prev => [
+      { id: Date.now(), date: new Date().toISOString(), reason: 'Tactical Rest' },
+      ...prev
+    ]);
+
     setCompletedDates(prevDates => {
       let newDates = [...prevDates];
       const index = newDates.findIndex(d => (typeof d === 'string' ? d : d.date) === today);
@@ -117,8 +123,81 @@ export default function Layout() {
 
   const [badges, setBadges] = useState(() => {
     const saved = localStorage.getItem('habitarc_badges');
-    return saved ? JSON.parse(saved) : [];
+    if (saved) return JSON.parse(saved);
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const d2 = new Date();
+    d2.setDate(d2.getDate() - 3);
+    return [
+      { id: 'streak_7_init', title: '7-Day Streak', icon: 'Flame', description: 'Flame-born momentum', date: d.toISOString() },
+      { id: 'perfect_day_init', title: 'Perfect Day', icon: 'Star', description: 'All targets locked & cleared', date: d2.toISOString() }
+    ];
   });
+
+  const [skipHistory, setSkipHistory] = useState(() => {
+    const saved = localStorage.getItem('habitarc_skip_history');
+    if (saved) return JSON.parse(saved);
+    const d = new Date();
+    d.setDate(d.getDate() - 2);
+    const d2 = new Date();
+    d2.setDate(d2.getDate() - 14);
+    return [
+      { id: 1, date: d.toISOString(), reason: 'Physical Burnout' },
+      { id: 2, date: d2.toISOString(), reason: 'Unplanned Emergency' }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('habitarc_skip_history', JSON.stringify(skipHistory));
+  }, [skipHistory]);
+
+  const handleExportData = () => {
+    const dataToExport = {
+      habitarc_habits_v2: habits,
+      habitarc_weekly_habits: weeklyHabits,
+      habitarc_dates_v2: completedDates,
+      habitarc_xp: totalXP,
+      habitarc_skips: mercySkips,
+      habitarc_badges: badges,
+      habitarc_skip_history: skipHistory,
+      version: '1.0'
+    };
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `habitarc_backup_${getTodayDateString()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (importedData.habitarc_habits_v2) setHabits(importedData.habitarc_habits_v2);
+        if (importedData.habitarc_weekly_habits) setWeeklyHabits(importedData.habitarc_weekly_habits);
+        if (importedData.habitarc_dates_v2) setCompletedDates(importedData.habitarc_dates_v2);
+        if (importedData.habitarc_xp !== undefined) setTotalXP(parseInt(importedData.habitarc_xp, 10));
+        if (importedData.habitarc_skips !== undefined) setMercySkips(parseInt(importedData.habitarc_skips, 10));
+        if (importedData.habitarc_badges) setBadges(importedData.habitarc_badges);
+        if (importedData.habitarc_skip_history) setSkipHistory(importedData.habitarc_skip_history);
+        
+        setIsSettingsOpen(false);
+        alert("System data successfully imported and synced!");
+      } catch (err) {
+        alert("Failed to parse the backup file. Ensure it is a valid HabitArc backup.");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = null; // reset input
+  };
 
   const [unlockedBadge, setUnlockedBadge] = useState(null);
 
@@ -319,6 +398,57 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex bg-[#0B1120] text-slate-100 font-sans selection:bg-cyan-500/30">
+      
+      {/* Settings Modal (Data Backup/Import) */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#060B14]/80 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-[#111827] border border-slate-800 rounded-2xl w-full max-w-md shadow-[0_0_40px_rgba(6,182,212,0.1)] overflow-hidden relative">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-cyan-400" />
+                System Settings
+              </h2>
+              <button onClick={() => setIsSettingsOpen(false)} className="text-slate-500 hover:text-slate-300 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              {/* Export */}
+              <div>
+                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-3">Data Backup</h3>
+                <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+                  Export your architectural progress (Pathways, XP, History, Badges) to a secure local JSON file. Do this regularly to prevent data loss if your browser cache is cleared.
+                </p>
+                <button 
+                  onClick={handleExportData}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 transition-colors font-semibold text-sm"
+                >
+                  <Download className="w-4 h-4" /> Download Backup File
+                </button>
+              </div>
+
+              {/* Import */}
+              <div>
+                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-3">Restore State</h3>
+                <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+                  Import a previous backup file to restore your configuration. Warning: This will overwrite your current active state.
+                </p>
+                <label className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-colors font-semibold text-sm cursor-pointer">
+                  <Upload className="w-4 h-4" /> 
+                  <span>Upload Backup File</span>
+                  <input 
+                    type="file" 
+                    accept=".json" 
+                    className="hidden" 
+                    onChange={handleImportData} 
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Badge Notification Overlay */}
       {unlockedBadge && (
         <div className="fixed bottom-8 right-8 z-[100] bg-[#111827] border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] rounded-2xl p-6 w-80 flex gap-4 animate-in slide-in-from-bottom-8 fade-in duration-500">
@@ -377,7 +507,7 @@ export default function Layout() {
             <Plus className="w-5 h-5" /> Start New Quest
           </button>
           <div className="pt-4 border-t border-slate-800/60 space-y-1">
-            <div className="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-slate-300 cursor-pointer transition-all text-xs font-medium">
+            <div onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-slate-300 cursor-pointer transition-all text-xs font-medium">
               <Settings className="w-4 h-4" /> Settings
             </div>
             <NavLink to="/help" className={({isActive}) => cn("flex items-center gap-3 px-4 py-2 transition-all text-xs font-medium", isActive ? "text-emerald-400" : "text-slate-500 hover:text-slate-300")}>
@@ -426,7 +556,7 @@ export default function Layout() {
           <Outlet context={{ 
             habits, weeklyHabits, toggleHabit, toggleWeeklyHabit, 
             addOrUpdateHabit, deleteHabit,
-            completedDates, mercySkips, useSkipDay, totalXP,
+            completedDates, mercySkips, useSkipDay, skipHistory, totalXP,
             currentStreak, longestStreak,
             isQuestModalOpen, setIsQuestModalOpen,
             badges, levelInfo

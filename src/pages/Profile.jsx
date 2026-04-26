@@ -1,5 +1,5 @@
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Star, BarChart2, Award, ExternalLink, Flame, CheckCircle2, HeartPulse, CalendarX2, RefreshCcw } from 'lucide-react';
+import { Star, BarChart2, Award, ExternalLink, Flame, CheckCircle2, HeartPulse, CalendarX2, RefreshCcw, History } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -8,7 +8,7 @@ function cn(...inputs) {
 }
 
 export default function Profile() {
-  const { totalXP, mercySkips, useSkipDay, completedDates, badges, levelInfo } = useOutletContext();
+  const { totalXP, mercySkips, useSkipDay, completedDates, badges, levelInfo, skipHistory } = useOutletContext();
   const navigate = useNavigate();
 
   const { level, progress, currentThreshold, nextThreshold } = levelInfo;
@@ -163,6 +163,35 @@ export default function Profile() {
           </button>
         </div>
 
+      </div>
+
+      {/* Skip History Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-3 p-8 rounded-2xl border border-slate-800 bg-[#111827] relative overflow-hidden">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-full bg-slate-800/50 border border-slate-700 flex items-center justify-center">
+              <History className="w-4 h-4 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-100">Mercy Skip Log</h3>
+          </div>
+          
+          {skipHistory && skipHistory.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {skipHistory.map(skip => {
+                const dateObj = new Date(skip.date);
+                const formattedDate = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                return (
+                  <div key={skip.id} className="p-4 rounded-xl border border-slate-700 bg-[#0B1120] flex flex-col">
+                    <span className="text-xs text-emerald-400 font-bold tracking-wider mb-1">{formattedDate}</span>
+                    <span className="text-sm text-slate-300 font-medium">{skip.reason || 'Tactical Rest'}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">No skips used yet. Your consistency is ironclad!</p>
+          )}
+        </div>
       </div>
 
       {/* Momentum Bottom Visual */}

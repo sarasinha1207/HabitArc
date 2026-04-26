@@ -17,7 +17,7 @@ function cn(...inputs) {
 export default function Heatmap() {
   const { habits, completedDates, mercySkips, useSkipDay, currentStreak, longestStreak } = useOutletContext();
   const navigate = useNavigate();
-  
+
   const total = habits.length;
   const completed = habits.filter(h => h.completed).length;
   const completionRate = total === 0 ? 0 : Math.round((completed / total) * 100);
@@ -34,7 +34,7 @@ export default function Heatmap() {
   };
   const monthlyData = getMonthlyData();
 
-  const heatmapValues = completedDates.map(d => 
+  const heatmapValues = completedDates.map(d =>
     typeof d === 'string' ? { date: d, count: 1 } : d
   );
 
@@ -48,7 +48,7 @@ export default function Heatmap() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
-      
+
       <header className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
         <div className="space-y-2 max-w-2xl">
           <h1 className="text-3xl font-bold text-slate-100 tracking-tight">Commitment Map</h1>
@@ -56,7 +56,7 @@ export default function Heatmap() {
             Visualize your consistency and architectural growth within the HabitArc neural network. Each node represents a day of discipline.
           </p>
         </div>
-        
+
         <div className="flex items-center gap-4 border border-slate-800 rounded-2xl bg-[#0B1120] p-4 shrink-0">
           <div className="flex flex-col border-r border-slate-800 pr-4">
             <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Longest Streak</span>
@@ -89,12 +89,14 @@ export default function Heatmap() {
                 if (!value || !value.date || value.count === 0) {
                   return {
                     'data-tooltip-id': 'heatmap-tooltip',
-                    'data-tooltip-content': '0 habits completed on this day'
+                    'data-tooltip-content': '0 tasks done on this day'
                   };
                 }
+                const dateObj = new Date(value.date);
+                const formattedDate = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
                 return {
                   'data-tooltip-id': 'heatmap-tooltip',
-                  'data-tooltip-content': `${value.count} habit${value.count > 1 ? 's' : ''} completed on this day`
+                  'data-tooltip-content': `${value.count} task${value.count > 1 ? 's' : ''} done on ${formattedDate}`
                 };
               }}
               showWeekdayLabels={true}
@@ -117,7 +119,7 @@ export default function Heatmap() {
 
       {/* 2x2 Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* Peak Performance */}
         <div className="p-6 rounded-2xl border border-slate-800 bg-[#111827] flex flex-col">
           <div className="flex items-center gap-2 mb-8">
@@ -150,7 +152,7 @@ export default function Heatmap() {
           <div className="h-32 w-full mt-auto">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                <Tooltip 
+                <Tooltip
                   cursor={{ fill: '#1e293b', opacity: 0.4 }}
                   contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
                 />
@@ -179,7 +181,7 @@ export default function Heatmap() {
           <p className="text-sm text-slate-300 max-w-xs mb-6 leading-relaxed">
             {mercySkips} Shields remaining. Don't let the streak break tonight.
           </p>
-          <button 
+          <button
             onClick={useSkipDay}
             disabled={mercySkips <= 0 || completedToday}
             className="w-full max-w-[200px] py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-200 text-sm font-bold rounded-lg transition-colors border border-slate-700"

@@ -1,4 +1,4 @@
-import { HelpCircle, ChevronRight, Zap, Target, Shield, Flame } from 'lucide-react';
+import { HelpCircle, ChevronRight, Zap, Target, Shield, Flame, ShieldAlert } from 'lucide-react';
 
 export default function Help() {
   const faqs = [

@@ -1,12 +1,23 @@
 import { useOutletContext } from 'react-router-dom';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { CheckCircle2, TrendingUp, History, Calendar, Lightbulb, MoreVertical } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
+
+const dummyChartData = [
+  { name: 'Mon', Physical: 80, Cognitive: 90, Metabolic: 60 },
+  { name: 'Tue', Physical: 85, Cognitive: 80, Metabolic: 70 },
+  { name: 'Wed', Physical: 90, Cognitive: 85, Metabolic: 75 },
+  { name: 'Thu', Physical: 75, Cognitive: 95, Metabolic: 65 },
+  { name: 'Fri', Physical: 95, Cognitive: 85, Metabolic: 80 },
+  { name: 'Sat', Physical: 100, Cognitive: 70, Metabolic: 90 },
+  { name: 'Sun', Physical: 85, Cognitive: 75, Metabolic: 85 },
+];
 
 export default function Dashboard() {
   const { habits, completedDates, longestStreak } = useOutletContext();
@@ -115,11 +126,20 @@ export default function Dashboard() {
               <button className="px-3 py-1 text-[10px] font-bold text-slate-400 hover:text-slate-300">30 Days</button>
             </div>
           </div>
-          <div className="flex-1 mt-4 relative">
-            {/* Blank Chart Area mimicking mockup */}
-            <div className="absolute bottom-0 w-full flex justify-between text-xs text-slate-500 px-4">
-              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-            </div>
+          <div className="flex-1 mt-4 relative w-full h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dummyChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                <XAxis dataKey="name" stroke="#475569" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#475569" fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '8px' }}
+                  itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                />
+                <Line type="monotone" dataKey="Physical" stroke="#22d3ee" strokeWidth={3} dot={{ r: 4, fill: '#22d3ee' }} />
+                <Line type="monotone" dataKey="Cognitive" stroke="#a855f7" strokeWidth={3} dot={{ r: 4, fill: '#a855f7' }} />
+                <Line type="monotone" dataKey="Metabolic" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>

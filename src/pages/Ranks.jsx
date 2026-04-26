@@ -41,15 +41,14 @@ const generateLeaderboard = () => {
 const topPlayers = generateLeaderboard();
 
 export default function Ranks() {
-  const { totalXP } = useOutletContext();
+  const { totalXP, levelInfo, badges } = useOutletContext();
   
-  const userLevel = Math.floor(totalXP / 1000) + 28;
   const userStats = {
     rank: 1204,
     name: 'Architect (You)',
     xp: totalXP,
-    level: userLevel,
-    badges: 68,
+    level: levelInfo.level,
+    badges: badges.length,
     isUser: true
   };
 
